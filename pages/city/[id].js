@@ -4,7 +4,9 @@ import axios from 'axios';
 import { UnitContext } from '@/context/UnitContext';
 import { ResultsContext } from '@/context/ResultsContext';
 import { RecentlyViewedContext } from '@/context/RecentlyViewedContext';
+import { IdSearchErrorContext } from '@/context/IdSearchErrorContext';
 import MainPage from '@/components/MainPage';
+
 
 export default function City() {
   const { recentlyViewed } = useContext(RecentlyViewedContext);
@@ -12,7 +14,7 @@ export default function City() {
   const { unit } = useContext(UnitContext);
   const router = useRouter();
   const { id } = router.query;
-  const [error, setError] = useState('');
+  const { idError, setIdError } = useContext(IdSearchErrorContext);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -27,15 +29,17 @@ export default function City() {
               units: unit,
             },
           });
+          setIdError('')
           setResults([response.data]);
         }
       } catch (error) {
-        setError('City not found.');
+        setIdError(error.response.data.message);
+        setResults([])
       }
     };
 
     fetchWeather();
-  }, [id, recentlyViewed, setResults, unit]);
+  }, [id, recentlyViewed, setIdError, setResults, unit]);
 
   return (
     <MainPage>

@@ -1,15 +1,17 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { Pagination, Button, Container, Form } from 'react-bootstrap';
+import { Pagination, Button, Container, Form, Row } from 'react-bootstrap';
 import Layout from './Layout';
 import CityList from './CityList';
 import CityDetail from './CityDetail';
 import { UnitContext } from '@/context/UnitContext';
 import { ResultsContext } from '@/context/ResultsContext';
+import { ResultErrorContext } from '@/context/ResultErrorContext';
+import styles from '@/styles/MainPage.module.css'
 
 export default function MainPage() {
   const [city, setCity] = useState('');
-  const [error, setError] = useState('');
+  const {error, setError} = useContext(ResultErrorContext);
   const { results, setResults } = useContext(ResultsContext);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,9 +38,8 @@ export default function MainPage() {
       setResults(response.data.list);
       setCurrentPage(1);
       setTotalPages(Math.ceil(response.data.list.length / 3));
-      setError('');
     } catch (error) {
-      setError('City not found.');
+      setError(error.response.data.message);
     }
   };
 
@@ -46,9 +47,11 @@ export default function MainPage() {
 
   return (
     <Layout>
-      <Container fluid className="d-flex align-items-center justify-content-center" style={{ height: '25vh' }}>
-        <Form onSubmit={handleSearch} className="p-4 border rounded" style={{ width: '50%' }}>
-          <Form.Group controlId="citySearch" style={{ width: '80%' }}>
+      <Container fluid className="d-flex align-items-center justify-content-center" style={{ height: '15vh', marginTop: '50px' }}>
+        <Form onSubmit={handleSearch} className="p-2 py-3 border rounded d-flex justify-content-center" style={{ width: '50%' }}>
+          <Form.Group controlId="citySearch" className="d-flex flex-column align-items-center justify-content-center"
+ style={{ width: '80%' }}>
+            <Row style={{ width: '100%' }}>
             <Form.Control
               type="text"
               value={city}
@@ -56,14 +59,19 @@ export default function MainPage() {
               placeholder="Enter city name or city, country code"
               style={{ marginRight: '10px' }}
             />
+            </Row>
+            {setError(results.length <= 0 ? `City not found for ${city}` : '')}
+            {error && <Row style={{marginTop: '10px'}}><div className={styles.divAsH6}>{error}</div></Row>}
           </Form.Group>
           <Button variant="primary" type="submit" style={{ marginLeft: '10px' }}>
             Search
           </Button>
+          
         </Form>
+        
       </Container>
 
-      {error && <p>{error}</p>}
+
       {results.length > 0 && (
         <div>
           <CityList

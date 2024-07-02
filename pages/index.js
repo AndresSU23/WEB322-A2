@@ -14,18 +14,23 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import { UnitContext } from '@/context/UnitContext';
 import { ResultsContext } from '@/context/ResultsContext';
+import { ResultErrorContext } from '@/context/ResultErrorContext';
+import { IdSearchErrorContext } from '@/context/IdSearchErrorContext';
 import MainPage from '@/components/MainPage';
 
 export default function Home() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const {error, setError} = useContext(ResultErrorContext);
+  const {idError, setIdError } = useContext(IdSearchErrorContext)
   const { results, setResults } = useContext(ResultsContext);
+  const [ firstLoad, setFirstLoad ] = useState(true)
   const { unit } = useContext(UnitContext); // 'metric' for Celsius, 'imperial' for Fahrenheit
 
   useEffect(() => {
     const fetchWeatherData = async () => {
       navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
+        if (firstLoad && !idError)
+        {const { latitude, longitude } = position.coords;
         try {
           const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
             params: {
@@ -35,29 +40,32 @@ export default function Home() {
               units: unit,
             },
           });
-          if (results.length === 0) {
-            setResults([response.data]);
-          }
+          setError('')
+          setResults([response.data]);
+          setFirstLoad(false)
+          
         } catch (error) {
-          setError('Failed to fetch weather data.');
-        }
+          setError('Failed to fetch weather data.' + error.response.data.message);
+        }}
       });
     };
 
     const handleRouteChange = (url) => {
-      console.log('App is changing to: ', url);
-      setResults([]);
+
+      setFirstLoad(true)
+      setIdError('')
       fetchWeatherData();
     };
 
     fetchWeatherData();
+    setIdError('')
 
     router.events.on('routeChangeComplete', handleRouteChange);
 
     return () => {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
-  }, [results.length, router.events, setError, setResults, unit]);
+  }, [error, firstLoad, idError, results.length, router.events, setError, setIdError, setResults, unit]);
 
   return (
     <MainPage>

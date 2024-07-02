@@ -3,11 +3,14 @@ import { useState, useContext } from 'react';
 import Link from 'next/link';
 import { RecentlyViewedContext } from '@/context/RecentlyViewedContext';
 import { UnitContext } from '@/context/UnitContext';
+import { IdSearchErrorContext } from '@/context/IdSearchErrorContext';
+import styles from '@/styles/Layout.module.css'
 
 export default function Layout({ children }) {
   const [searchId, setSearchId] = useState('');
   const { recentlyViewed } = useContext(RecentlyViewedContext);
   const { unit, setUnit } = useContext(UnitContext);
+  const { idError, setIdError } = useContext(IdSearchErrorContext)
 
   const updateSearchId = (e) => setSearchId(e.target.value);
 
@@ -22,6 +25,7 @@ export default function Layout({ children }) {
           <Navbar.Brand as={Link} href="/">Weather App</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <FormGroup className="d-flex ml-auto">
+            {idError && <div className={styles.divFadeInRight}>{idError}</div>}
             <FormControl
               type="text"
               placeholder="City ID"
